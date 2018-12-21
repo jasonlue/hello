@@ -15,7 +15,7 @@ type indicators struct {
 		UUID       string
 		Pattern    string
 		Confidence int
-		OutLabels  []struct {
+		OutLabels  []struct {//label to be output, file MIME type.
 			Name string
 		}
 	}
