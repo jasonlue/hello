@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
+	"sync"
 
 	"github.com/google/gopacket/pcapgo"
 
@@ -47,48 +51,142 @@ func key(pkt gopacket.Packet) string {
 	}
 	return fmt.Sprintf("%s:%d-%s-%s:%d", ipv4.DstIP, dstPort, proto, ipv4.SrcIP, srcPort)
 }
-func doSplitFile(file string) error {
+
+func doSplitFile(file string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	splitFile(file)
+}
+
+func splitFile2(file string) {
+	fmt.Printf("Splitting %s\n", file)
+	fi, err := os.Stat(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %s", file, err)
+		return
+	}
+	if !fi.Mode().IsRegular() {
+		fmt.Fprintf(os.Stderr, "%s: is not a regular file.\n", file)
+		return
+	}
 	hpcap, err := pcap.OpenOffline(file)
 	if err != nil {
-		return fmt.Errorf("failed to open %s: %s", file, err)
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
 	defer hpcap.Close()
 	m := map[string]*pcapgo.Writer{}
+
+	packetSource := gopacket.NewPacketSource(hpcap, hpcap.LinkType())
+	base := filepath.Base(file)
+	i := len(base) - 1
+	for ; i >= 0 && base[i] != '.'; i-- {
+	}
+	for packet := range packetSource.Packets() {
+		k := key(packet)
+		_, present := m[k]
+		if !present {
+			output := base[:i] + "-" + k + base[i:]
+			f, err := os.Create(output)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				return
+			}
+			defer f.Close()
+			w := pcapgo.NewWriter(f)
+			w.WriteFileHeader(1024 /*snapshotLen*/, layers.LinkTypeEthernet)
+			m[k] = w
+		}
+		m[k].WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+	}
+}
+
+// splitFile split pcap file into a set of pcap files based on src/dsk ip and port tuple.
+//to avoid too many open files error (1024 limit, can be set by ulimit -Sn 4096)
+//write to the memory first and write the files at once.
+func splitFile(file string) {
+	fi, err := os.Stat(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %s", file, err)
+		return
+	}
+	if !fi.Mode().IsRegular() {
+		//		fmt.Fprintf(os.Stderr, "%s: is not a regular file.\n", file)
+		return
+	}
+	fmt.Printf("Splitting %s\n", file)
+	hpcap, err := pcap.OpenOffline(file)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	defer hpcap.Close()
+	type valType struct {
+		w *pcapgo.Writer
+		b *bytes.Buffer
+	}
+	m := map[string]valType{}
 
 	packetSource := gopacket.NewPacketSource(hpcap, hpcap.LinkType())
 	for packet := range packetSource.Packets() {
 		k := key(packet)
 		_, present := m[k]
 		if !present {
-			i := len(file) - 1
-			for ; i >= 0 && file[i] != '.'; i-- {
-			}
-
-			output := file[:i] + "-" + k + file[i:]
-			f, _ := os.Create(output) //assert success?
-			w := pcapgo.NewWriter(f)
+			b := bytes.NewBuffer([]byte{})
+			w := pcapgo.NewWriter(b)
 			w.WriteFileHeader(1024 /*snapshotLen*/, layers.LinkTypeEthernet)
-			defer f.Close()
-			m[k] = w
+			m[k] = valType{w, b}
 		}
-		m[k].WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+		m[k].w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
 	}
+	base := filepath.Base(file)
+	i := len(base) - 1
+	for ; i >= 0 && base[i] != '.'; i-- {
+	}
+	wg := sync.WaitGroup{}
+	for k, v := range m {
+		output := base[:i] + "-" + k + base[i:]
+		wg.Add(1)
+		go func(o string, b []byte) {
+			err := ioutil.WriteFile(o, b, 0644)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			wg.Done()
+		}(output, v.b.Bytes())
+	}
+	wg.Wait()
+}
+
+//splitFile2 not use pcap lib. straight gopacket.
+func splitFile3(file string) error {
 	return nil
 }
 func doSplit(files []string) {
+	wg := sync.WaitGroup{}
 	for _, file := range files {
-		if err := doSplitFile(file); err != nil {
-			fmt.Println(err) //print out error. but continue next file.
-		}
+		wg.Add(1)
+		go doSplitFile(file, &wg)
 	}
+	wg.Wait()
+	fmt.Printf("Done.\n")
 }
 
+func split(files []string) {
+	for _, file := range files {
+		splitFile(file)
+	}
+	fmt.Printf("Done.\n")
+}
 func main() {
 	help := flag.Bool("h", false, "help")
-	split := flag.Bool("s", false, "Split pcap file into series of files of the same session")
+	splt := flag.Bool("s", false, "Split pcap file into series of files of the same session")
 	flag.Parse()
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [option...] [file...]\n\nOptions:\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 	switch {
-	case *split == true:
+	case *splt == true:
 		doSplit(flag.Args())
 	case *help == true:
 		flag.Usage()
