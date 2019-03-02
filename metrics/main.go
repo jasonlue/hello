@@ -8,6 +8,7 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/process"
 )
 
 func main() {
@@ -55,4 +56,20 @@ func main() {
 	u, _ := disk.Usage("/")
 	fmt.Println(u)
 
+	pid := 16873 //os.Getpid() // process.test
+	proc, _ := process.NewProcess(int32(pid))
+	fmt.Println(proc)
+
+	mi, _ := proc.MemoryInfo()
+	fmt.Println(mi)
+
+	m, err := proc.MemoryPercent()
+	fmt.Println(m)
+
+	processor, err := proc.CPUAffinity()
+	if err == nil {
+		fmt.Println(processor)
+	}
+	load, err := proc.CPUPercent()
+	fmt.Println(load)
 }

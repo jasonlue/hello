@@ -53,7 +53,14 @@ func textInColor() {
 	}
 
 }
+
+func test() (i int) {
+	i = 10
+	return
+}
 func main() {
+	i := test()
+
 	textInColor()
 	enum()
 	cmdln()

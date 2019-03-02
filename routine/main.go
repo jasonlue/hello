@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"sync"
 	"time"
 )
@@ -300,10 +301,55 @@ func nWriterNReaderQuit() {
 	fmt.Printf("main: all readers done\n")
 }
 
+func profileSelect() { //big prices paid on select wait on channel. 5% each case. so try to minimize num of channels.
+	var q [10]chan bool
+	for i := 0; i < len(q); i++ {
+		q[i] = make(chan bool)
+	}
+	f, _ := os.Create("cpu.prof")
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+	for i := 0; i < 1000; i++ {
+		go func() {
+			ticker := time.NewTicker(100 * time.Millisecond)
+			count := 0
+			for {
+				select {
+				case <-q[0]:
+					return
+				case <-q[1]:
+					return
+				case <-q[2]:
+					return
+				case <-q[3]:
+					return
+				case <-q[4]:
+					return
+				case <-q[5]:
+					return
+				case <-q[6]:
+					return
+				case <-q[7]:
+					return
+				case <-q[8]:
+					return
+				case <-q[9]:
+					return
+				case <-ticker.C:
+					count++
+				}
+			}
+		}()
+	}
+	<-time.After(10 * time.Second) //wait on time channel for 10 secs.
+	close(q[0])                    //signal all to quit.
+}
 func main() {
 	fmt.Println("Hello, Go Routines!")
-	//oneReaderOneWriter()
-	nWriterNReaderQuit()
+	rand.Seed(time.Now().UTC().UnixNano())
+	profileSelect()
+	oneWriterOneReader()
+	//nWriterNReaderQuit()
 	//simpleGo()
 	//go tchan()
 	//fibchan()
@@ -313,5 +359,5 @@ func main() {
 	//graceful exit for the program.
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
-
+	fmt.Println("Bye, Go Routines.")
 }
