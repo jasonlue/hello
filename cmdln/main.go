@@ -59,10 +59,10 @@ func test() (i int) {
 	return
 }
 func main() {
-	i := test()
+//	i := test()
 
-	textInColor()
-	enum()
+//	textInColor()
+//	enum()
 	cmdln()
 	//	s := sum(1, 2, 3, 4, 5)
 	//	fmt.Printf("%d, %T, %bb, 0x%X\n", s, s, s, s)
