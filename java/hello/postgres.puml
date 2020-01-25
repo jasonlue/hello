@@ -1,0 +1,13 @@
+@startuml postgres
+
+DBMS *--{ Database
+note right of Database: also called catalog
+Database *--{ Schema
+note right of Schema: similar to namespace
+Schema *--{ Table
+note right of Table: also called relations
+
+
+DataSource *--{ Connection
+Connection *--{ Session
+@enduml
