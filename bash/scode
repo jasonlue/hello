@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo He!!o2ub | sudo -S code --user-data-dir .
+
