@@ -1,4 +1,5 @@
 #!/bin/bash
-
+#disable access control for x server so that root can access x server of current user
+xhost +
 echo He!!o2ub | sudo -S code --user-data-dir ~
 
