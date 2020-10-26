@@ -1,2 +1,9 @@
-apt install -y curl
-curl -X PUT -H "Content-Type: application/json" -d '{"registration_code":"test-YCTljKf"}' http://localhost:8765/v1/provision
+#!/bin/bash
+
+function main() {
+    Provision $@
+}
+function Provision() {
+    curl -X PUT --insecure -H "Content-Type: application/json" -d '{"registration_code":"$1"}' https://localhost:8765/v1/provision
+}
+main

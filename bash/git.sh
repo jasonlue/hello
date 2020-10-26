@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #install git
 apt install git
 
