@@ -2,7 +2,7 @@
 apt install curl
 
 #install go
-VERSION=1.12.17
+VERSION=1.15.3
 curl -O https://dl.google.com/go/go${VERSION}.linux-amd64.tar.gz
 tar xvf go${VERSION}.linux-amd64.tar.gz
 mv go /lib/go-${VERSION}
