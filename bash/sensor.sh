@@ -17,7 +17,7 @@ SENSOR_PACKAGES=(
 main() {
     bootstrap
     install_dev_packages
-    fetchSensor_packages
+    fetch_sensor_packages
     install_sensor_packages
 }
 bootstrap() {
