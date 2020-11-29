@@ -1,0 +1,5 @@
+{
+    "go.alternateTools": {
+        "dlv": "/usr/local/bin/sudo-dlv"
+    }
+}
