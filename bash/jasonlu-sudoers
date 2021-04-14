@@ -1,6 +1,0 @@
-# copy this file to /etc/sudoers.d to avoid password when jasonlu sudos. this is important to set up vscode debugger with root privileges
-# chmod 0440 jasonlu-sudoers after copying it to /etc/sudoers.d
-
-# when jasonlu sudos, it runs as root user with no password on ALL hosts (including remote ssh)
-#user host=(as-user:as-group)flags commands
-jasonlu ALL=(root)NOPASSWD: ALL

@@ -1,0 +1,9 @@
+[url "git@github.icebrg.io:"]
+	insteadOf = https://github.icebrg.io/
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+[user]
+	name = Jason Lu
+	email = jason.lu@gigamon.com
+[push]
+	default = simple
