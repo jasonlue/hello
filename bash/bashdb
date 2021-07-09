@@ -1,0 +1,9 @@
+#!/bin/sh
+bashdb_dir=$(dirname $BASH_SOURCE[0])
+bashdb=$bashdb_dir/bashdb.sh
+
+if [ "$DEBUG_AS_ROOT" == "true" ]; then
+    exec sudo $bashdb "$@"
+else
+    exec $bashdb "$@"
+fi
