@@ -1,3 +1,4 @@
+# copy this file as /etc/gitconfig
 [url "git@github.icebrg.io:"]
 	insteadOf = https://github.icebrg.io/
 [url "git@github.com:"]

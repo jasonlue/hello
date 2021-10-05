@@ -13,7 +13,9 @@ install_go() {
     cd ~
     curl -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
     tar xvf go${GO_VERSION}.linux-amd64.tar.gz
+    sudo ln -s /home/${USER}/go/bin/go /usr/bin/go
 }
+
 install_go_extra(){
     #Install go-bindata
     GOPATH=/home/${USER}/go-bindata go get -u github.com/go-bindata/go-bindata/...
@@ -33,10 +35,15 @@ exists_go_version() {
     fi
 }
 go_version() {
-    if go version; then
-        echo $(go version)
-    else
+    if ! which go > /etc/null; then
         echo ""
+    else
+        echo $(go version)
     fi
 }
-main
+
+if (( $# == 0 )); then
+    main
+else
+    eval $1
+fi
