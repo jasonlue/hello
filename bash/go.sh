@@ -65,7 +65,7 @@ install_go() {
 # setup_go_path 
 #########################################
 setup_go_path(){
-    echo 'PATH=$HOME/go/bin:\$PATH' > /etc/profile.d/go_path.sh # setup for next login
+    echo "PATH=$HOME/go/bin:\$PATH" > /etc/profile.d/go_path.sh # setup for next login
     . /etc/profile.d/go_path.sh # set up for now.
 }
 
