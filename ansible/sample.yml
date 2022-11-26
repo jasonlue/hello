@@ -1,0 +1,11 @@
+---
+  - name: "sample play"
+    hosts: localhost
+
+    tasks:
+
+      - name: "find files"
+        find:
+          paths: /etc
+          file_type: file
+          recurse: false
